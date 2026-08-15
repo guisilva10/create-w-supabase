@@ -1,15 +1,19 @@
 {
   "name": "create-w-supabase",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Create a new Next.js project with Better Auth, Supabase, Prisma and shadcn/ui",
   "type": "module",
   "bin": {
     "create-w-supabase": "index.js"
   },
   "files": [
-    "index.js",
-    "template"
+    "index.js"
   ],
+  "dependencies": {
+    "commander": "^13.1.0",
+    "degit": "^2.8.4",
+    "prompts": "^2.4.2"
+  },
   "keywords": [
     "create",
     "nextjs",

@@ -1,50 +1,59 @@
 #!/usr/bin/env node
 
-import { cpSync, readFileSync, writeFileSync, renameSync, existsSync, readdirSync } from "fs";
-import { resolve, join, basename } from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
+import { Command } from "commander";
+import degit from "degit";
+import prompts from "prompts";
+import { execSync } from "child_process";
+import path from "path";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const projectName = process.argv[2] || "my-app";
-const targetDir = resolve(process.cwd(), projectName);
+const program = new Command();
 
-if (existsSync(targetDir)) {
-  const files = readdirSync(targetDir);
-  const isEmpty = files.length === 0 || (files.length === 1 && files[0] === ".git");
-  if (!isEmpty) {
-    console.error(`\n  Error: Directory "${projectName}" is not empty.\n`);
-    process.exit(1);
-  }
-}
+program
+  .argument("[project-name]", "Project name")
+  .action(async (projectName) => {
+    let targetDir = projectName;
 
-const displayName = projectName === "." ? basename(process.cwd()) : projectName;
+    if (!targetDir) {
+      const response = await prompts({
+        type: "text",
+        name: "name",
+        message: 'Project name? (use "." for current directory)',
+        initial: "my-app",
+      });
+      targetDir = response.name;
+    }
 
-console.log(`\n  Creating project in ${targetDir}...\n`);
+    const projectPath = path.resolve(targetDir);
 
-// Copy template
-cpSync(join(__dirname, "template"), targetDir, { recursive: true });
+    const emitter = degit("guisilva10/create-w-supabase/template", {
+      cache: false,
+      force: true,
+    });
 
-// Rename gitignore to .gitignore
-const gitignoreSrc = join(targetDir, "gitignore");
-const gitignoreDest = join(targetDir, ".gitignore");
-if (existsSync(gitignoreSrc)) {
-  renameSync(gitignoreSrc, gitignoreDest);
-}
+    console.log(`\n  Creating project in ${projectPath}...\n`);
 
-// Update package.json name
-const pkgPath = join(targetDir, "package.json");
-const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
-pkg.name = displayName;
-writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
+    try {
+      await emitter.clone(projectPath);
 
-console.log(`  Done! Now run:\n`);
-if (projectName !== ".") {
-  console.log(`  cd ${projectName}`);
-}
-console.log(`  pnpm install`);
-console.log(`  cp .env.example .env`);
-console.log(`  # Fill in your Supabase credentials in .env`);
-console.log(`  pnpm db:generate`);
-console.log(`  pnpm db:push`);
-console.log(`  pnpm dev\n`);
+      console.log("  Installing dependencies...\n");
+
+      execSync("pnpm install", {
+        cwd: projectPath,
+        stdio: "inherit",
+      });
+
+      console.log("\n  Done! Now run:\n");
+      if (targetDir !== ".") {
+        console.log(`  cd ${targetDir}`);
+      }
+      console.log("  cp .env.example .env");
+      console.log("  # Fill in your Supabase credentials in .env");
+      console.log("  pnpm db:generate");
+      console.log("  pnpm db:push");
+      console.log("  pnpm dev\n");
+    } catch (err) {
+      console.error("  Error:", err.message);
+    }
+  });
+
+program.parse(process.argv);
