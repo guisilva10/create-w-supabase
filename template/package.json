@@ -44,13 +44,6 @@
     "three": "^0.182.0",
     "zod": "^4.3.6"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@prisma/client",
-      "prisma",
-      "better-auth"
-    ]
-  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
