@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { cpSync, readFileSync, writeFileSync, renameSync, existsSync } from "fs";
-import { resolve, join } from "path";
+import { cpSync, readFileSync, writeFileSync, renameSync, existsSync, readdirSync } from "fs";
+import { resolve, join, basename } from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 
@@ -10,9 +10,15 @@ const projectName = process.argv[2] || "my-app";
 const targetDir = resolve(process.cwd(), projectName);
 
 if (existsSync(targetDir)) {
-  console.error(`\n  Error: Directory "${projectName}" already exists.\n`);
-  process.exit(1);
+  const files = readdirSync(targetDir);
+  const isEmpty = files.length === 0 || (files.length === 1 && files[0] === ".git");
+  if (!isEmpty) {
+    console.error(`\n  Error: Directory "${projectName}" is not empty.\n`);
+    process.exit(1);
+  }
 }
+
+const displayName = projectName === "." ? basename(process.cwd()) : projectName;
 
 console.log(`\n  Creating project in ${targetDir}...\n`);
 
@@ -29,11 +35,13 @@ if (existsSync(gitignoreSrc)) {
 // Update package.json name
 const pkgPath = join(targetDir, "package.json");
 const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
-pkg.name = projectName;
+pkg.name = displayName;
 writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
 
 console.log(`  Done! Now run:\n`);
-console.log(`  cd ${projectName}`);
+if (projectName !== ".") {
+  console.log(`  cd ${projectName}`);
+}
 console.log(`  pnpm install`);
 console.log(`  cp .env.example .env`);
 console.log(`  # Fill in your Supabase credentials in .env`);
