@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "description": "Create a new Next.js project with Better Auth, Supabase, Prisma and shadcn/ui",
   "type": "module",
-  "bin": "./index.js",
+  "bin": {
+    "create-w-supabase": "index.js"
+  },
   "files": [
     "index.js",
     "template"
@@ -22,6 +24,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/guisilva10/create-w-supabase.git"
+    "url": "git+https://github.com/guisilva10/create-w-supabase.git"
   }
 }
